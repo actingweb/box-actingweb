@@ -1,0 +1,59 @@
+application: box-spark-dev
+version: 1
+runtime: python27
+api_version: 1
+threadsafe: true
+
+builtins:
+- deferred: on
+
+handlers:
+- url: /_ah/queue/deferred
+  script: google.appengine.ext.deferred.deferred.application
+  login: admin
+
+# The below are standard actingweb applications
+- url: /
+  script: aw-root-factory.application
+  secure: always
+
+- url: /(.*?)/www/?(.*)
+  script: aw-actor-www.application
+  secure: always
+
+- url: /(.*?)/properties/?(.*)
+  script: aw-actor-properties.application
+  secure: always
+
+- url: /(.*?)/callbacks/?(.*)
+  script: aw-actor-callbacks.application
+  secure: always
+
+- url: /(.*?)/meta/?(.*)
+  script: aw-actor-meta.application
+  secure: always
+
+- url: /(.*?)/trust/?(.*)
+  script: aw-actor-trust.application
+  secure: always
+
+- url: /(.*?)/subscriptions/?(.*)
+  script: aw-actor-subscription.application
+  secure: always
+
+- url: /(.*?)/oauth/?(.*)
+  script: aw-actor-oauth.application
+  secure: always
+
+# Add any non-actingweb root path applications below
+# Use the aw-actor-www application to register interactive web pages per actor
+# Register non-actor paths below. Typically paths that cannot have actorid as prefix to the path.
+
+- url: /oauth
+  script: aw-callback-oauth.application
+  secure: always
+
+# Catch all for any root requests to actors/proxies
+- url: /.*
+  script: aw-actor-root.application
+  secure: always
