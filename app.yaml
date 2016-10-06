@@ -25,6 +25,10 @@ handlers:
   script: aw-actor-properties.application
   secure: always
 
+- url: /(.*?)/resources/?(.*)
+  script: aw-actor-resources.application
+  secure: always
+
 - url: /(.*?)/callbacks/?(.*)
   script: aw-actor-callbacks.application
   secure: always

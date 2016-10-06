@@ -70,6 +70,10 @@ class config():
             ('friend', 'properties', '', 'a'),              # Allow friend/partner/admin all
             ('partner', 'properties', '', 'a'),
             ('admin', 'properties', '', 'a'),
+            ('creator', 'resources', '', 'a'),
+            ('friend', 'resources', '', 'a'),              # Allow friend/partner/admin all
+            ('partner', 'resources', '', 'a'),
+            ('admin', 'resources', '', 'a'),
             ('', 'trust/<type>', 'POST', 'a'),              # Allow unauthenticated POST
             ('owner', 'trust/<type>/<id>', '', 'a'),        # Allow trust peer full access
             ('creator', 'trust', '', 'a'),                  # Allow access to all to

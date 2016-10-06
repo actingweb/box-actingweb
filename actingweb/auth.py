@@ -119,13 +119,13 @@ class auth():
             'code': 403,                # Result code (http)
             'text': "Forbidden",        # Proposed response text
             'headers': [],              # Headers to add to response after authentication has been done
-        }             
+        }
         # Whether authentication is complete or not (depends on flow)
         self.authn_done = False
         # acl stores the actual verified credentials and access rights after
         # authentication and authorisation have been done
         self.acl = {
-            "authenticated": False, # Has authentication been verified and passed?
+            "authenticated": False,  # Has authentication been verified and passed?
             "authorised": False,    # Has authorisation been done and appropriate acls set?
             "rights": '',           # "a", "r" (approve or reject)
             "relationship": None,   # E.g. creator, friend, admin, etc
@@ -138,17 +138,21 @@ class auth():
         if not self.actor.id:
             self.actor = None
             return
+        # We need to initialise oauth for use towards the external oauth service
+        oauth_token = self.actor.getProperty('oauth_token').value
+        if oauth_token:
+            self.oauth = oauth.oauth(token=oauth_token)
+            self.property = 'oauth_token'
+            self.token = self.actor.getProperty(self.property).value
+            self.expiry = self.actor.getProperty('oauth_token_expiry').value
+            self.refresh_expiry = self.actor.getProperty('oauth_refresh_token_expiry').value
+            self.refresh_token = self.actor.getProperty('oauth_refresh_token').value
         if self.type == 'basic':
-            self.token = self.actor.passphrase
             self.realm = Config.auth_realm
         elif self.type == 'oauth':
-            self.oauth = oauth.oauth()
+            if not self.oauth:
+                self.oauth = oauth.oauth()
             if self.oauth.enabled():
-                self.property = 'oauth_token'
-                self.token = self.actor.getProperty(self.property).value
-                self.expiry = self.actor.getProperty('oauth_token_expiry').value
-                self.refresh_expiry = self.actor.getProperty('oauth_refresh_token_expiry').value
-                self.refresh_token = self.actor.getProperty('oauth_refresh_token').value
                 self.cookie = 'oauth_token'
                 if self.actor.getProperty('cookie_redirect').value:
                     self.cookie_redirect = Config.root + \
@@ -174,8 +178,8 @@ class auth():
             self.refresh_token = result['refresh_token']
             if 'refresh_token_expires_in' in result:
                 self.refresh_expiry = str(now + result['refresh_token_expires_in'])
-            elif 'expires_in' in result:
-                self.refresh_expiry = str(now + result['expires_in'])
+            else:
+                self.refresh_expiry = str(now + (365*24*3600))  # Set a default expiry 12 months ahead
             self.actor.setProperty('oauth_refresh_token', self.refresh_token)
             self.actor.setProperty('oauth_refresh_token_expiry', self.refresh_expiry)
 
@@ -194,7 +198,10 @@ class auth():
         return True
 
     def validateOAuthToken(self):
-        """ Called to validate if the token we already have is still a valid token or needs to be refreshed."""
+        """ Called to validate the token as part of a web-based flow.
+
+            Returns the redirect URI to send back to the browser or empty string.
+        """
         if not self.token or not self.expiry:
             return self.oauth.oauthRedirectURI(state=self.actor.id)
         now = time.time()
@@ -206,6 +213,88 @@ class auth():
         result = self.oauth.oauthRefreshToken(self.refresh_token)
         self.__processOAuthAccept(result)
         return ""
+
+    def oauthGET(self, url=None, params=None):
+        """Used to call GET from the attached oauth service.
+
+           Uses oauth.getRequest(), but refreshes token if necessary.
+           The function fails if token is invalid and no refresh is
+           possible. For web-based flows, validateOAuthToken() needs
+           to be used to validate token and get redirect URI for new
+           authorization flow.
+        """
+        if not url:
+            return None
+        ret = self.oauth.getRequest(url=url, params=params)
+        code1 = self.oauth.last_response_code
+        if ret and any(ret) or code1 == 204 or code1 == 201:
+            return ret
+        if code1 == 401 or code1 == 403:
+            refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
+            if not refresh:
+                logging.warn('Tried to refresh token and failed for actor(' + self.actor.id + ')')
+            else:
+                self.__processOAuthAccept(refresh)
+                ret2 = self.oauth.getRequest(url=url, params=params)
+                code2 = self.oauth.last_response_code
+                if ret2 and any(ret2) or code2 == 204 or code2 == 201:
+                    return ret2
+        return None
+
+
+    def oauthDELETE(self, url=None):
+        """Used to call DELETE from the attached oauth service.
+
+           Uses oauth.deleteRequest(), but refreshes token if necessary.
+           The function fails if token is invalid and no refresh is
+           possible. For web-based flows, validateOAuthToken() needs
+           to be used to validate token and get redirect URI for new
+           authorization flow.
+        """
+        if not url:
+            return None
+        ret = self.oauth.deleteRequest(url=url)
+        code1 = self.oauth.last_response_code
+        if ret and any(ret) or code1 == 204:
+            return ret
+        if code1 == 401 or code1 == 403:
+            refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
+            if not refresh:
+                logging.warn('Tried to refresh token and failed for actor(' + self.actor.id + ')')
+            else:
+                self.__processOAuthAccept(refresh)
+                ret2 = self.oauth.deleteRequest(url=url)
+                code2 = self.oauth.last_response_code
+                if ret2 and any(ret2) or code2 == 204:
+                    return ret2
+        return None
+
+    def oauthPOST(self, url=None, params=None, urlencode=False):
+        """Used to call POST from the attached oauth service.
+
+           Uses oauth.postRequest(), but refreshes token if necessary.
+           The function fails if token is invalid and no refresh is
+           possible. For web-based flows, validateOAuthToken() needs
+           to be used to validate token and get redirect URI for new
+           authorization flow.
+        """
+        if not url:
+            return None
+        ret = self.oauth.postRequest(url=url, params=params, urlencode=urlencode)
+        code1 = self.oauth.last_response_code
+        if ret and any(ret) or code1 == 204 or code1 == 201:
+            return ret
+        if code1 == 401 or code1 == 403:
+            refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
+            if not refresh:
+                logging.warn('Tried to refresh token and failed for actor(' + self.actor.id + ')')
+            else:
+                self.__processOAuthAccept(refresh)
+                ret2 = self.oauth.postRequest(url=url, params=params, urlencode=urlencode)
+                code2 = self.oauth.last_response_code
+                if ret2 and any(ret2) or code2 == 204 or code2 == 201:
+                    return ret2
+        return None
 
     # Called from a www page (browser access) to verify that a cookie has been
     # set to the actor's valid token.
@@ -252,12 +341,12 @@ class auth():
         self.actor.deleteProperty('cookie_redirect')
         return True
 
-    def __checkBasicAuth(self, appreq, path):
+    def __checkBasicAuthCreator(self, appreq, path):
         if self.type != 'basic':
             self.response['code'] = 403
             self.response['text'] = "Forbidden"
             return False
-        if not self.token:
+        if not self.actor.passphrase:
             logging.warn("Trying to do basic auth when no passphrase value can be found.")
             self.response['code'] = 403
             self.response['text'] = "Forbidden"
@@ -322,7 +411,7 @@ class auth():
             self.__checkCookieAuth(appreq=appreq, path=path)
             return
         elif self.type == 'basic':
-            self.__checkBasicAuth(appreq=appreq, path=path)
+            self.__checkBasicAuthCreator(appreq=appreq, path=path)
             return
         self.authn_done = True
         self.response['code'] = 403
@@ -331,7 +420,7 @@ class auth():
 
     def checkAuthorisation(self, path='', subpath='', method='', peerid='', approved=True):
         """ Checks if the authenticated user has access rights based on acl in config.py.
-        
+
         Takes the path, subpath, method, and peerid of the path (if auth user is different from the peer that owns the
         path, e.g. creator). If approved is False, then the trust relationship does not need to be approved for access"""
         if len(self.acl["peerid"]) > 0 and approved and self.acl["approved"] == False:

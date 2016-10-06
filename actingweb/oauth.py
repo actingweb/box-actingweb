@@ -59,9 +59,7 @@ class oauth():
         if token:
             self.token = token
 
-    def postRequest(self, url, params=None, cleartoken=False, urlencode=False):
-        if cleartoken:
-            self.token = None
+    def postRequest(self, url, params=None, urlencode=False):
         if params:
             if urlencode:
                 data = urllib.urlencode(params)
@@ -93,14 +91,16 @@ class oauth():
             self.last_response_code = response.status_code
             self.last_response_message = response.content
         except:
-            logging.warn("Spark POST failed with exception")
-            return False
+            self.last_response_code = 0
+            self.last_response_message = 'No response'
+            logging.warn("Oauth POST failed with exception")
+            return None
         if response.status_code == 204:
-            return True
-        if response.status_code != 200:
+            return {}
+        if response.status_code != 200 and response.status_code != 201:
             logging.info('Error when sending POST request: ' +
                          str(response.status_code) + response.content)
-            return False
+            return None
         logging.debug('Oauth POST response JSON:' + response.content)
         return json.loads(response.content)
 
@@ -120,7 +120,9 @@ class oauth():
             self.last_response_code = response.status_code
             self.last_response_message = response.content
         except:
-            logging.warn("Spark GET failed with exception")
+            self.last_response_code = 0
+            self.last_response_message = 'No response'
+            logging.warn("Oauth GET failed with exception")
             return None
         if response.status_code < 200 or response.status_code > 299:
             logging.info('Error when sending GET request to Oauth: ' +
@@ -153,12 +155,15 @@ class oauth():
             self.last_response_message = response.content
         except:
             logging.warn("Spark DELETE failed.")
+            self.last_response_code = 0
+            self.last_response_message = 'No response'
+            return None
         if response.status_code < 200 and response.status_code > 299:
             logging.info('Error when sending DELETE request to Oauth: ' +
                          str(response.status_code) + response.content)
-            return False
+            return None
         if response.status_code == 204:
-            return True
+            return {}
         return json.loads(response.content)
 
     def oauthRedirectURI(self, state=''):
@@ -183,8 +188,9 @@ class oauth():
             'code': code,
             'redirect_uri': self.config['redirect_uri'],
         }
+        self.token = None
         result = self.postRequest(url=self.config[
-                                  'token_uri'], cleartoken=True, params=params, urlencode=True)
+                                  'token_uri'], params=params, urlencode=True)
         if result and 'access_token' in result:
             self.token = result['access_token']
         return result
@@ -198,8 +204,9 @@ class oauth():
             'client_secret': self.config['client_secret'],
             'refresh_token': refresh_token,
         }
+        self.token = None
         result = self.postRequest(url=self.config[
-                                  'token_uri'], cleartoken=True, params=params, urlencode=True)
+                                  'token_uri'], params=params, urlencode=True)
         if not result:
             self.token = None
             return False
