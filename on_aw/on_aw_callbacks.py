@@ -39,23 +39,24 @@ def on_delete_callbacks(myself, req, name):
 
 def on_post_callbacks(myself, req, name):
     """Customizible function to handle POST /callbacks"""
-    # return True if callback has been processed
-    # THE BELOW IS SAMPLE CODE
-    #Config = config.config()
-    #my_oauth=oauth.oauth(token = myself.getProperty('oauth_token').value)
-    #logging.debug("Callback body: "+req.request.body.decode('utf-8', 'ignore'))
-    # non-json POSTs to be handled first
-    # if name == 'somethingelse':
-    #    return True
-    # Handle json POSTs below
-    #body = json.loads(req.request.body.decode('utf-8', 'ignore'))
-    #data = body['data']
-    # if name == 'somethingmore':
-    #    callback_id = req.request.get('id')
-    #    req.response.set_status(204)
-    #    return True
-    #req.response.set_status(403, "Callback not found.")
-    # END OF SAMPLE CODE
+    Config = config.config()
+    logging.debug("Callback body: "+req.request.body.decode('utf-8', 'ignore'))
+    try:
+        body = json.loads(req.request.body.decode('utf-8', 'ignore'))
+    except:
+        return False
+    path = name.split('/')
+    if path[0] == 'box':
+        trigger = 'Unknown'
+        filename = 'Unknown'
+        if 'trigger' in body:
+            trigger = body['trigger']
+        if 'source' in body and 'name' in body['source']:
+            filename = body['source']['name']
+        logging.debug('Got trigger(' + trigger + ') with filename(' + filename + ')')
+        req.response.set_status(204)
+        return True
+    req.response.set_status(404, "Callback not found.")
     return False
 
 
