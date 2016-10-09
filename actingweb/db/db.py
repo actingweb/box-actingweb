@@ -41,6 +41,7 @@ class Subscription(ndb.Model):
     granularity = ndb.StringProperty()
     target = ndb.StringProperty()
     subtarget = ndb.StringProperty()
+    resource = ndb.StringProperty()
     seqnr = ndb.IntegerProperty(default=1)
     callback = ndb.BooleanProperty()
 

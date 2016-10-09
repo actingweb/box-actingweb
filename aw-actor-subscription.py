@@ -29,8 +29,9 @@ class rootHandler(webapp2.RequestHandler):
         peerid = self.request.get('peerid')
         target = self.request.get('target')
         subtarget = self.request.get('subtarget')
+        resource = self.request.get('resource')
 
-        subscriptions = myself.getSubscriptions(peerid=peerid, target=target, subtarget=subtarget)
+        subscriptions = myself.getSubscriptions(peerid=peerid, target=target, subtarget=subtarget, resource=resource)
         if not subscriptions:
             self.response.set_status(404, 'Not found')
             return
@@ -41,6 +42,7 @@ class rootHandler(webapp2.RequestHandler):
                 'subscriptionid': sub.subid,
                 'target': sub.target,
                 'subtarget': sub.subtarget,
+                'resource': sub.resource,
                 'granularity': sub.granularity,
                 'sequence': sub.seqnr,
             })
@@ -69,6 +71,10 @@ class rootHandler(webapp2.RequestHandler):
                 subtarget = params['subtarget']
             else:
                 subtarget = None
+            if 'resource' in params:
+                resource = params['resource']
+            else:
+                resource = None
             if 'granularity' in params:
                 granularity = params['granularity']
             else:
@@ -77,6 +83,7 @@ class rootHandler(webapp2.RequestHandler):
             peerid = self.request.get('peerid')
             target = self.request.get('target')
             subtarget = self.request.get('subtarget')
+            resource = self.request.get('resource')
             granularity = self.request.get('granularity')
         if not peerid or len(peerid) == 0:
             self.response.set_status(400, 'Missing peer URL')
@@ -85,7 +92,7 @@ class rootHandler(webapp2.RequestHandler):
             self.response.set_status(400, 'Missing target')
             return
         remoteLoc = myself.createRemoteSubscription(
-            peerid=peerid, target=target, subtarget=subtarget, granularity=granularity)
+            peerid=peerid, target=target, subtarget=subtarget, resource=resource, granularity=granularity)
         if not remoteLoc:
             self.response.set_status(408, 'Unable to create remote subscription with peer')
             return
@@ -109,8 +116,9 @@ class relationshipHandler(webapp2.RequestHandler):
             return
         target = self.request.get('target')
         subtarget = self.request.get('subtarget')
+        resource = self.request.get('resource')
 
-        subscriptions = myself.getSubscriptions(peerid=peerid, target=target, subtarget=subtarget)
+        subscriptions = myself.getSubscriptions(peerid=peerid, target=target, subtarget=subtarget, resource=resource)
         if not subscriptions:
             self.response.set_status(404, 'Not found')
             return
@@ -120,6 +128,7 @@ class relationshipHandler(webapp2.RequestHandler):
                 'subscriptionid': sub.subid,
                 'target': sub.target,
                 'subtarget': sub.subtarget,
+                'resource': sub.resource,
                 'granularity': sub.granularity,
                 'sequence': sub.seqnr,
             })
@@ -149,6 +158,10 @@ class relationshipHandler(webapp2.RequestHandler):
                 subtarget = params['subtarget']
             else:
                 subtarget = None
+            if 'resource' in params:
+                resource = params['resource']
+            else:
+                resource = None
             if 'granularity' in params:
                 granularity = params['granularity']
             else:
@@ -166,7 +179,7 @@ class relationshipHandler(webapp2.RequestHandler):
             self.response.set_status(403)
             return
         new_sub = myself.createSubscription(
-            peerid=check.acl["peerid"], target=target, subtarget=subtarget, granularity=granularity)
+            peerid=check.acl["peerid"], target=target, subtarget=subtarget, resource=resource, granularity=granularity)
         if not new_sub:
             self.response.set_status(500, 'Unable to create new subscription')
             return
@@ -176,6 +189,7 @@ class relationshipHandler(webapp2.RequestHandler):
             'subscriptionid': new_sub.subid,
             'target': new_sub.target,
             'subtarget': new_sub.subtarget,
+            'resource': new_sub.resource,
             'granularity': new_sub.granularity,
             'sequence': new_sub.seqnr,
         }
@@ -223,6 +237,7 @@ class subscriptionHandler(webapp2.RequestHandler):
             return
         data = {'target': sub.target,
                 'subtarget': sub.subtarget,
+                'resource': sub.resource,
                 'data': pairs,
                 }
         out = json.dumps(data)
@@ -310,6 +325,7 @@ class diffHandler(webapp2.RequestHandler):
             'timestamp': str(diff.timestamp),
             'target': sub.target,
             'subtarget': sub.subtarget,
+            'resource': sub.resource,
             'data': d,
         }
         sub.clearDiff(seqid)

@@ -22,11 +22,12 @@ class subscription():
                 self.subscription = result
                 self.target = result.target
                 self.subtarget = result.subtarget
+                self.resource = result.resource
                 self.granularity = result.granularity
                 self.seqnr = result.seqnr
                 self.callback = result.callback
 
-    def create(self, target=None, subtarget=None, granularity=None, seqnr=1):
+    def create(self, target=None, subtarget=None, resource=None, granularity=None, seqnr=1):
         """Create new subscription and push it to db"""
         Config = config.config()
         if not self.peerid:
@@ -35,10 +36,13 @@ class subscription():
             target = ''
         if not subtarget:
             subtarget = ''
+        if not resource:
+            resource = ''
         if not granularity:
             granularity = ''
         self.target = target
         self.subtarget = subtarget
+        self.resource = resource
         self.granularity = granularity
         self.seqnr = seqnr
         if not self.subid:
@@ -50,6 +54,7 @@ class subscription():
         if self.subscription:
             self.subscription.target = target
             self.subscription.subtarget = subtarget
+            self.subscription.resource = resource
             self.subscription.granularity = granularity
             self.subscription.seqnr = seqnr
             self.subscription.callback = self.callback
@@ -59,6 +64,7 @@ class subscription():
                                                 subid=self.subid,
                                                 target=target,
                                                 subtarget=subtarget,
+                                                resource=resource,
                                                 granularity=granularity,
                                                 seqnr=seqnr,
                                                 callback=self.callback
@@ -140,6 +146,7 @@ class subscription():
         self.seqnr = 1
         self.target = None
         self.subtarget = None
+        self.resource = None
         self.granularity = None
         if not actor:
             return False

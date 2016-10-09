@@ -116,28 +116,39 @@ class actor():
     def getTrustRelationship(self, peerid=None):
         if not peerid:
             return None
-        return db.Trust.query(db.Trust.id == self.id and db.Trust.peerid == peerid).get(use_cache=False)
+        return db.Trust.query(db.Trust.id == self.id,
+                              db.Trust.peerid == peerid).get(use_cache=False)
 
     def getTrustRelationships(self, relationship='', peerid='', type=''):
         """Retrieves all trust relationships or filtered."""
         if len(relationship) > 0 and len(peerid) > 0 and len(type) > 0:
             relationships = db.Trust.query(
-                db.Trust.id == self.id and db.Trust.relationship == relationship and db.Trust.peerid == peerid and db.Trust.type == type).fetch(use_cache=False)
+                db.Trust.id == self.id,
+                db.Trust.relationship == relationship,
+                db.Trust.peerid == peerid,
+                db.Trust.type == type).fetch(use_cache=False)
         elif len(peerid) > 0 and len(type) > 0:
             relationships = db.Trust.query(
-                db.Trust.id == self.id and db.Trust.peerid == peerid and db.Trust.type == type).fetch(use_cache=False)
+                db.Trust.id == self.id,
+                db.Trust.peerid == peerid,
+                db.Trust.type == type).fetch(use_cache=False)
         elif len(relationship) > 0 and len(peerid) > 0:
             relationships = db.Trust.query(
-                db.Trust.id == self.id and db.Trust.relationship == relationship and db.Trust.peerid == peerid).fetch(use_cache=False)
+                db.Trust.id == self.id,
+                db.Trust.relationship == relationship,
+                db.Trust.peerid == peerid).fetch(use_cache=False)
         elif len(relationship) > 0:
             relationships = db.Trust.query(
-                db.Trust.id == self.id and db.Trust.relationship == relationship).fetch(use_cache=False)
+                db.Trust.id == self.id,
+                db.Trust.relationship == relationship).fetch(use_cache=False)
         elif len(peerid) > 0:
             relationships = db.Trust.query(
-                db.Trust.id == self.id and db.Trust.peerid == peerid).fetch(use_cache=False)
+                db.Trust.id == self.id,
+                db.Trust.peerid == peerid).fetch(use_cache=False)
         elif len(type) > 0:
             relationships = db.Trust.query(
-                db.Trust.id == self.id and db.Trust.type == type).fetch(use_cache=False)
+                db.Trust.id == self.id,
+                db.Trust.type == type).fetch(use_cache=False)
         else:
             relationships = db.Trust.query(db.Trust.id == self.id).fetch(use_cache=False)
         rels = []
@@ -354,14 +365,14 @@ class actor():
             return False
         return True
 
-    def createSubscription(self, peerid=None, target=None, subtarget=None, granularity=None, subid=None, callback=False):
+    def createSubscription(self, peerid=None, target=None, subtarget=None, resource=None, granularity=None, subid=None, callback=False):
         new_sub = subscription.subscription(
             actor=self, peerid=peerid, subid=subid, callback=callback)
-        new_sub.create(target=target, subtarget=subtarget,
+        new_sub.create(target=target, subtarget=subtarget, resource=resource,
                        granularity=granularity)
         return new_sub
 
-    def createRemoteSubscription(self, peerid=None, target=None, subtarget=None, granularity=None):
+    def createRemoteSubscription(self, peerid=None, target=None, subtarget=None, resource=None, granularity=None):
         """Creates a new subscription at peerid."""
         if not peerid or not target:
             return False
@@ -376,6 +387,8 @@ class actor():
         }
         if subtarget:
             params['subtarget'] = subtarget
+        if resource:
+            params['resource'] = resource
         if granularity and len(granularity) > 0:
             params['granularity'] = granularity
         requrl = peer.baseuri + '/subscriptions/' + self.id
@@ -407,30 +420,52 @@ class actor():
             return None
         if self.last_response_code == 201:
             self.createSubscription(peerid=peerid, target=target,
-                                    subtarget=subtarget, granularity=granularity, subid=subid, callback=True)
+                                    subtarget=subtarget, resource=resource, granularity=granularity, subid=subid, callback=True)
             return response.headers['Location']
         else:
             return None
 
-    def getSubscriptions(self, peerid=None, target=None, subtarget=None, callback=False):
+    def getSubscriptions(self, peerid=None, target=None, subtarget=None, resource=None, callback=False):
         """Retrieves subscriptions from db."""
         if not self.id:
             return None
-        if peerid and target and subtarget:
+        if peerid and target and subtarget and resource:
             subs = db.Subscription.query(
-                db.Subscription.id == self.id and db.Subscription.peerid == peerid and db.Subscription.target == target and db.Subscription.subtarget == subtarget).fetch(use_cache=False)
+                db.Subscription.id == self.id,
+                db.Subscription.peerid == peerid,
+                db.Subscription.target == target,
+                db.Subscription.subtarget == subtarget,
+                db.Subscription.resource == resource).fetch(use_cache=False)
+        elif peerid and target and subtarget:
+            subs = db.Subscription.query(
+                db.Subscription.id == self.id,
+                db.Subscription.peerid == peerid,
+                db.Subscription.target == target,
+                db.Subscription.subtarget == subtarget).fetch(use_cache=False)
         elif peerid and target:
             subs = db.Subscription.query(
-                db.Subscription.id == self.id and db.Subscription.peerid == peerid and db.Subscription.target == target).fetch(use_cache=False)
+                db.Subscription.id == self.id,
+                db.Subscription.peerid == peerid,
+                db.Subscription.target == target).fetch(use_cache=False)
         elif peerid:
             subs = db.Subscription.query(
-                db.Subscription.id == self.id and db.Subscription.peerid == peerid).fetch(use_cache=False)
+                db.Subscription.id == self.id,
+                db.Subscription.peerid == peerid).fetch(use_cache=False)
+        elif target and subtarget and resource:
+            subs = db.Subscription.query(
+                db.Subscription.id == self.id,
+                db.Subscription.target == target,
+                db.Subscription.subtarget == subtarget,
+                db.Subscription.resource == resource).fetch(use_cache=False)
         elif target and subtarget:
             subs = db.Subscription.query(
-                db.Subscription.id == self.id and db.Subscription.target == target and db.Subscription.subtarget == subtarget).fetch(use_cache=False)
+                db.Subscription.id == self.id,
+                db.Subscription.target == target,
+                db.Subscription.subtarget == subtarget).fetch(use_cache=False)
         elif target:
             subs = db.Subscription.query(
-                db.Subscription.id == self.id and db.Subscription.target == target).fetch(use_cache=False)
+                db.Subscription.id == self.id,
+                db.Subscription.target == target).fetch(use_cache=False)
         else:
             subs = db.Subscription.query(
                 db.Subscription.id == self.id).fetch(use_cache=False)
@@ -448,7 +483,7 @@ class actor():
         if not subid:
             return False
         sub = subscription.subscription(
-            self, peerid=peerid, subid=subid, callback=callback)
+            actor=self, peerid=peerid, subid=subid, callback=callback)
         if sub.subscription:
             return sub
 
@@ -508,6 +543,8 @@ class actor():
         }
         if sub.subtarget:
             params['subtarget'] = sub.subtarget
+        if sub.resource:
+            params['resource'] = sub.resource
         if sub.granularity == "high":
             params['data'] = blob
         if sub.granularity == "low":
@@ -537,17 +574,22 @@ class actor():
             self.last_response_code = 0
             self.last_response_message = 'No response from peer for subscription callback'
 
-    def registerDiffs(self, target=None, subtarget=None, blob=None):
-        """Registers a blob diff against all subscriptions with the correct target and subtarget."""
-        if not blob or not target:
+    def registerDiffs(self, target=None, subtarget=None, resource=None, blob=None):
+        """Registers a blob diff against all subscriptions with the correct target, subtarget, and resource."""
+        if blob is None or not target:
             return
-        # Get all subscriptions, both with the specific subtarget and those
+        # Get all subscriptions, both with the specific subtarget/resource and those
         # without
         subs = self.getSubscriptions(
-            target=target, subtarget=None, callback=False)
-        if subtarget:
+            target=target, subtarget=None, resource=None, callback=False)
+        if subtarget and resource:
             logging.debug("registerDiffs() - blob(" + blob + "), target(" +
-                          target + "), subtarget(" + subtarget + "), # of subs(" + str(len(subs)) + ")")
+                          target + "), subtarget(" + subtarget + "), resource(" +
+                          resource + "), # of subs(" + str(len(subs)) + ")")
+        elif subtarget:
+            logging.debug("registerDiffs() - blob(" + blob + "), target(" +
+                          target + "), subtarget(" + subtarget + 
+                          "), # of subs(" + str(len(subs)) + ")")            
         else:
             logging.debug("registerDiffs() - blob(" + blob + "), target(" +
                           target + "), # of subs(" + str(len(subs)) + ")")
@@ -556,12 +598,52 @@ class actor():
             if subtarget and sub.subtarget and sub.subtarget != subtarget:
                 logging.debug("     - no match on subtarget, skipping...")
                 continue
-            logging.debug("     - subscription(" + sub.subid +
-                          ") for peer(" + sub.peerid + ")")
+            # Skip the ones without correct resource
+            if resource and sub.resource and sub.resource != resource:
+                logging.debug("     - no match on resource, skipping...")
+                continue
             subObj = subscription.subscription(
                 self, peerid=sub.peerid, subid=sub.subid)
+            logging.debug("     - processing subscription(" + sub.subid +
+                          ") for peer(" + sub.peerid + ") with target(" + 
+                          subObj.target + ") subtarget(" + str(subObj.subtarget or '') +
+                          ") and resource(" + str(subObj.resource or '') + ")")
+            finblob = None
+            # Subscription with a resource, but this diff is on a higher level
+            if (not resource or not subtarget) and subObj.subtarget and subObj.resource:
+                # Create a json diff on the subpart that this subscription
+                # covers
+                try:
+                    jsonblob = json.loads(blob)
+                    if not subtarget:
+                        subblob = json.dumps(jsonblob[subObj.subtarget][subObj.resource])
+                    else:
+                        subblob = json.dumps(jsonblob[subObj.resource])
+                except:
+                    # The diff does not contain the resource
+                    subblob = None
+                    logging.debug("         - subscription has resource(" +
+                                  subObj.resource + "), no matching blob found in diff")
+                    continue
+                logging.debug("         - subscription has resource(" +
+                              subObj.resource + "), adding diff(" + subblob + ")")
+                finblob = subblob
+            # The diff is on the resource, but the subscription is on a 
+            # higher level
+            elif resource and not subObj.resource:
+                # Create a data["subtarget"]["resource"] = blob diff to give correct level
+                # of diff to subscriber
+                upblob = {}
+                try:
+                    jsonblob = json.loads(blob)
+                    upblob[subtarget][resource] = jsonblob
+                except:
+                    upblob[subtarget][resource] = blob
+                finblob = json.dumps(upblob)
+                logging.debug("         - diff has resource(" + resource +
+                              "), subscription has not, adding diff(" + finblob + ")")
             # Subscriptions with subtarget, but this diff is on a higher level
-            if not subtarget and subObj.subtarget:
+            elif not subtarget and subObj.subtarget:
                 # Create a json diff on the subpart that this subscription
                 # covers
                 try:
@@ -570,19 +652,13 @@ class actor():
                 except:
                     # The diff blob does not contain the subtarget
                     subblob = None
+                    continue
                 logging.debug("         - subscription has subtarget(" +
                               subObj.subtarget + "), adding diff(" + subblob + ")")
-                diff = subObj.addDiff(blob=subblob)
-                if not diff:
-                    logging.warn(
-                        "Failed when registering a sub-diff to subscription (" + sub.subid + "). Will not send callback.")
-                else:
-                    deferred.defer(self.callbackSubscription,
-                                   peerid=sub.peerid, sub=subObj, diff=diff, blob=subblob)
-                continue
+                finblob = subblob
             # The diff is on the subtarget, but the subscription is on the
             # higher level
-            if subtarget and not subObj.subtarget:
+            elif subtarget and not subObj.subtarget:
                 # Create a data["subtarget"] = blob diff to give correct level
                 # of diff to subscriber
                 upblob = {}
@@ -591,27 +667,21 @@ class actor():
                     upblob[subtarget] = jsonblob
                 except:
                     upblob[subtarget] = blob
-                upblob = json.dumps(upblob)
+                finblob = json.dumps(upblob)
                 logging.debug("         - diff has subtarget(" + subtarget +
-                              "), subscription has not, adding diff(" + upblob + ")")
-                diff = subObj.addDiff(blob=upblob)
-                if not diff:
-                    logging.warn(
-                        "Failed when registering a sub-diff to subscription (" + sub.subid + "). Will not send callback.")
-                else:
-                    deferred.defer(self.callbackSubscription, peerid=sub.peerid,
-                                   sub=subObj, diff=diff, blob=upblob)
-                continue
-            # The diff is correct for the subscription
-            diff = subObj.addDiff(blob=blob)
-            logging.debug(
-                "         - exact target/subtarget match, adding diff(" + blob + ")")
+                              "), subscription has not, adding diff(" + finblob + ")")
+            else:
+                # The diff is correct for the subscription
+                logging.debug(
+                              "         - exact target/subtarget match, adding diff(" + blob + ")")
+                finblob = blob
+            diff = subObj.addDiff(blob=finblob)
             if not diff:
                 logging.warn("Failed when registering a diff to subscription (" +
                              sub.subid + "). Will not send callback.")
             else:
                 deferred.defer(self.callbackSubscription, peerid=sub.peerid,
-                               sub=subObj, diff=diff, blob=blob)
+                               sub=subObj, diff=diff, blob=finblob)
 
     def __init__(self, id=''):
         self.get(id)
