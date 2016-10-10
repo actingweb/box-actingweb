@@ -77,9 +77,6 @@ class actor():
         properties = db.Property.query(db.Property.id == self.id).fetch(use_cache=False)
         for prop in properties:
             prop.key.delete(use_cache=False)
-        relationships = db.Trust.query(db.Trust.id == self.id).fetch(use_cache=False)
-        for rel in relationships:
-            rel.key.delete(use_cache=False)
         diffs = db.SubscriptionDiff.query(
             db.SubscriptionDiff.id == self.id).fetch(use_cache=False)
         for diff in diffs:
@@ -88,6 +85,9 @@ class actor():
         for sub in subs:
             self.deleteRemoteSubscription(peerid=sub.peerid, subid=sub.subid)
             sub.key.delete(use_cache=False)
+        relationships = db.Trust.query(db.Trust.id == self.id).fetch(use_cache=False)
+        for rel in relationships:
+            rel.key.delete(use_cache=False)
         result = db.Actor.query(db.Actor.id == self.id).get(use_cache=False)
         if result:
             result.key.delete(use_cache=False)
