@@ -21,14 +21,14 @@ class MainPage(webapp2.RequestHandler):
         if self.request.get('_method') == 'POST':
             self.post(id, name)
         (Config, myself, check) = auth.init_actingweb(appreq=self,
-                                                      id=id, path='callbacks')
+                                                      id=id, path='callbacks', add_response=False)
         if not myself or (check.response["code"] != 200 and check.response["code"] != 401):
             auth.add_auth_response(appreq=self, auth_obj=check)
             return
         if not check.checkAuthorisation(path='callbacks', subpath=name, method='GET'):
             self.response.set_status(403, 'Forbidden')
             return
-        if not on_aw_callbacks.on_get_callbacks(myself, self, name):
+        if not on_aw_callbacks.on_get_callbacks(myself=myself, req=self, auth=check, name=name):
             self.response.set_status(403, 'Forbidden')
 
     def put(self, id, name):
@@ -58,7 +58,7 @@ class MainPage(webapp2.RequestHandler):
         if not check.checkAuthorisation(path='callbacks', subpath=name, method='DELETE'):
             self.response.set_status(403, 'Forbidden')
             return
-        if not on_aw_callbacks.on_delete_callbacks(myself, self, name):
+        if not on_aw_callbacks.on_delete_callbacks(myself=myself, req=self, auth=check, name=name):
             self.response.set_status(403, 'Forbidden')
 
     def post(self, id, name):
@@ -82,7 +82,7 @@ class MainPage(webapp2.RequestHandler):
                 except:
                     self.response.set_status(405, "Error in json body")
                     return
-                if on_aw_callbacks.on_post_subscriptions(myself=myself, req=self, sub=sub, peerid=peerid, data=params):
+                if on_aw_callbacks.on_post_subscriptions(myself=myself, req=self, auth=check, sub=sub, peerid=peerid, data=params):
                     self.response.set_status(204, 'Found')
                 else:
                     self.response.set_status(405, 'Processing error')
@@ -92,7 +92,7 @@ class MainPage(webapp2.RequestHandler):
         if not check.checkAuthorisation(path='callbacks', subpath=name, method='POST'):
             self.response.set_status(403, 'Forbidden')
             return
-        if not on_aw_callbacks.on_post_callbacks(myself, self, name):
+        if not on_aw_callbacks.on_post_callbacks(myself=myself, req=self, auth=check, name=name):
             self.response.set_status(403, 'Forbidden')
 
 application = webapp2.WSGIApplication([

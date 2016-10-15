@@ -137,21 +137,22 @@ class auth():
         self.actor = actor.actor(id)
         if not self.actor.id:
             self.actor = None
+            self.oauth = oauth.oauth(token=None)
+            self.token = None
+            self.expiry = None
+            self.refresh_expiry = None
+            self.refresh_token = None
             return
         # We need to initialise oauth for use towards the external oauth service
-        oauth_token = self.actor.getProperty('oauth_token').value
-        if oauth_token:
-            self.oauth = oauth.oauth(token=oauth_token)
-            self.property = 'oauth_token'
-            self.token = self.actor.getProperty(self.property).value
-            self.expiry = self.actor.getProperty('oauth_token_expiry').value
-            self.refresh_expiry = self.actor.getProperty('oauth_refresh_token_expiry').value
-            self.refresh_token = self.actor.getProperty('oauth_refresh_token').value
+        self.property = 'oauth_token'  # Property name used to set self.token
+        self.token = self.actor.getProperty(self.property).value
+        self.oauth = oauth.oauth(token=self.token)
+        self.expiry = self.actor.getProperty('oauth_token_expiry').value
+        self.refresh_expiry = self.actor.getProperty('oauth_refresh_token_expiry').value
+        self.refresh_token = self.actor.getProperty('oauth_refresh_token').value    
         if self.type == 'basic':
             self.realm = Config.auth_realm
         elif self.type == 'oauth':
-            if not self.oauth:
-                self.oauth = oauth.oauth()
             if self.oauth.enabled():
                 self.cookie = 'oauth_token'
                 if self.actor.getProperty('cookie_redirect').value:
@@ -229,7 +230,7 @@ class auth():
         code1 = self.oauth.last_response_code
         if ret and any(ret) or code1 == 204 or code1 == 201:
             return ret
-        if code1 == 401 or code1 == 403:
+        if not ret or code1 == 401 or code1 == 403:
             refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
             if not refresh:
                 logging.warn('Tried to refresh token and failed for actor(' + self.actor.id + ')')
@@ -321,9 +322,9 @@ class auth():
                 self.authn_done = True
         if self.cookie_redirect:
             logging.debug('Cookie redirect already set!')
-            return False
-        self.actor.setProperty('cookie_redirect', self.actor.id + path)
-        self.cookie_redirect = self.actor.id + path
+        else:
+            self.actor.setProperty('cookie_redirect', '/' + self.actor.id + path)
+            self.cookie_redirect = '/' + self.actor.id + path
         self.response['code'] = 302
         return False
 

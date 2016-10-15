@@ -51,6 +51,22 @@ class actor():
             self.creator = None
             self.passphrase = None
 
+    def get_from_property(self, name='oauthId', value=None):
+        """ Initialise an actor by matching on a stored property.
+
+        Use with caution as the property's value de-facto becomes
+        a security token. If multiple properties are found with the
+        same value, no actor will be initialised.
+        Also note that this is a costly operation as all properties
+        of this type will be retrieved and proceessed.
+        """
+        prop = property.property(name=name, value=value)
+        if not prop.actorId:
+            self.id = None
+            self.creator = None
+            self.passphrase = None
+        self.get(prop.actorId)  
+
     def create(self, url, creator, passphrase):
         """"Creates a new actor and persists it to db."""
         seed = url

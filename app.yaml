@@ -56,6 +56,10 @@ handlers:
 - url: /oauth
   script: aw-callback-oauth.application
   secure: always
+  
+- url: /bot
+  script: aw-bot.application
+  secure: always
 
 # Catch all for any root requests to actors/proxies
 - url: /.*

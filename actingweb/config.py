@@ -44,6 +44,10 @@ class config():
             'grant_type': "authorization_code",
             'refresh_type': "refresh_token",
         }
+        self.bot = {
+            'token': '',
+            'email': '',
+        }
         #########
         # Trust settings for this app
         #########

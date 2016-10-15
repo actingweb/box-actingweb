@@ -30,7 +30,7 @@ class MainPage(webapp2.RequestHandler):
                 # to the original identity that was bound to this actor.
                 # The check_on_oauth_success() function returns False if identity (or
                 # anything else) is wrong.
-                if not on_aw_oauth.check_on_oauth_success(myself, token=check.token):
+                if not on_aw_oauth.check_on_oauth_success(myself=myself, req=self, auth=check, token=check.token):
                     logging.info('Forbidden identity.')
                     self.response.set_status(403, "Forbidden to this identity")
                     return

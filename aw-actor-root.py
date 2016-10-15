@@ -42,7 +42,7 @@ class MainPage(webapp2.RequestHandler):
         if not check.checkAuthorisation(path='/', method='DELETE'):
             self.response.set_status(403)
             return
-        on_aw_delete.on_aw_delete_actor(myself)
+        on_aw_delete.on_aw_delete_actor(myself=myself, req=self, auth=check)
         myself.delete()
         self.response.set_status(204)
         return

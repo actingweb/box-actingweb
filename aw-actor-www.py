@@ -106,7 +106,7 @@ class MainPage(webapp2.RequestHandler):
                 __file__), 'templates/aw-actor-www-trust.html')
             self.response.write(template.render(template_path, template_values).encode('utf-8'))
             return
-        output = on_aw_www_paths.on_www_paths(myself, path)
+        output = on_aw_www_paths.on_www_paths(myself=myself, req=self, auth=check, path=path)
         if output:
             self.response.write(output)
         else:
