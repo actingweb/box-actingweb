@@ -7,7 +7,6 @@ import json
 from actingweb import actor
 from actingweb import auth
 from actingweb import config
-from spark import ciscospark
 from on_aw import on_aw_bot
 import webapp2
 
@@ -20,7 +19,7 @@ class MainPage(webapp2.RequestHandler):
         Config = config.config()
         if not Config.bot['token'] or len(Config.bot['token']) == 0:
             self.response.set_status(404)
-            return False
+            return
         check = auth.auth(id=None)
         check.oauth.token = Config.bot['token']
         ret = on_aw_bot.on_bot_post(req=self, auth=check, path=path)
