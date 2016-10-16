@@ -23,7 +23,7 @@ class MainPage(webapp2.RequestHandler):
         check = auth.auth(id=None)
         check.oauth.token = Config.bot['token']
         ret = on_aw_bot.on_bot_post(req=self, auth=check, path=path)
-        if ret and ret > 0 and ret < 999:
+        if ret and ret >= 100 and ret < 999:
             self.response.set_status(ret)
             return
         elif ret:
