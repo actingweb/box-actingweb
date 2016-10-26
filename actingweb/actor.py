@@ -71,7 +71,7 @@ class actor():
         """"Creates a new actor and persists it to db."""
         seed = url
         now = datetime.datetime.now()
-        seed += now.strftime("%Y%m%dT%H%M%S")
+        seed += now.strftime("%Y%m%dT%H%M%S%f")
         if len(creator) > 0:
             self.creator = creator
         else:

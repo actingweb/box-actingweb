@@ -230,7 +230,7 @@ class auth():
         code1 = self.oauth.last_response_code
         if ret and any(ret) or code1 == 204 or code1 == 201:
             return ret
-        if not ret or code1 == 401 or code1 == 403:
+        if self.actor and self.actor.id and (not ret or code1 == 401 or code1 == 403):
             refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
             if not refresh:
                 logging.warn('Tried to refresh token and failed for actor(' + self.actor.id + ')')
@@ -258,7 +258,7 @@ class auth():
         code1 = self.oauth.last_response_code
         if ret and any(ret) or code1 == 204:
             return ret
-        if code1 == 401 or code1 == 403:
+        if self.actor and self.actor.id and (code1 == 401 or code1 == 403):
             refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
             if not refresh:
                 logging.warn('Tried to refresh token and failed for actor(' + self.actor.id + ')')
@@ -285,7 +285,7 @@ class auth():
         code1 = self.oauth.last_response_code
         if ret and any(ret) or code1 == 204 or code1 == 201:
             return ret
-        if code1 == 401 or code1 == 403:
+        if self.actor and self.actor.id and (code1 == 401 or code1 == 403):
             refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
             if not refresh:
                 logging.warn('Tried to refresh token and failed for actor(' + self.actor.id + ')')
@@ -344,6 +344,7 @@ class auth():
 
     def __checkBasicAuthCreator(self, appreq, path):
         if self.type != 'basic':
+            logging.warn("Trying to do basic auth when auth type is not basic")
             self.response['code'] = 403
             self.response['text'] = "Forbidden"
             return False
@@ -365,16 +366,20 @@ class auth():
         if basic.lower() != "basic":
             self.response['code'] = 403
             self.response['text'] = "No basic auth in Authorization header"
+            logging.debug("No basic auth in Authorization header")
             return False
         self.authn_done = True
         (username, password) = base64.b64decode(auth.split(' ')[1]).split(':')
         if username != self.actor.creator:
             self.response['code'] = 403
             self.response['text'] = "Invalid username or password"
+            logging.debug("Wrong creator username")
             return False
         if password != self.actor.passphrase:
             self.response['code'] = 403
             self.response['text'] = "Invalid username or password"
+            logging.debug("Wrong creator passphrase(" +
+                          password + ") correct(" + self.actor.passphrase + ")")
             return False
         self.acl["relationship"] = "creator"
         self.acl["authenticated"] = True
@@ -383,7 +388,7 @@ class auth():
 
     def checkTokenAuth(self, appreq):
         """ Called with an http request to check the Authorization header and validate if we have a peer with this token."""
-        if not 'Authorization' in appreq.request.headers:
+        if 'Authorization' not in appreq.request.headers:
             return False
         auth = appreq.request.headers['Authorization']
         (bearer, token) = auth.split(' ')
@@ -403,28 +408,34 @@ class auth():
         else:
             return False
 
-
     def checkAuthentication(self, appreq, path):
         """ Checks authentication in appreq, redirecting back to path if oauth is done."""
+        logging.debug('Checking authentication, token auth...')
         if self.checkTokenAuth(appreq):
             return
         elif self.type == 'oauth':
+            logging.debug('Checking authentication, oauth cookie...')
             self.__checkCookieAuth(appreq=appreq, path=path)
             return
         elif self.type == 'basic':
+            logging.debug('Checking authentication, basic auth...')
             self.__checkBasicAuthCreator(appreq=appreq, path=path)
             return
+        logging.debug('Authentication done, and failed')
         self.authn_done = True
         self.response['code'] = 403
         self.response['text'] = "Forbidden"
         return
 
-    def checkAuthorisation(self, path='', subpath='', method='', peerid='', approved=True):
-        """ Checks if the authenticated user has access rights based on acl in config.py.
+    def checkAuthorisation(self, path='', subpath='', method='', peerid='',
+                           approved=True):
+        """ Checks if the authenticated user has acl access rights in config.py.
 
-        Takes the path, subpath, method, and peerid of the path (if auth user is different from the peer that owns the
-        path, e.g. creator). If approved is False, then the trust relationship does not need to be approved for access"""
-        if len(self.acl["peerid"]) > 0 and approved and self.acl["approved"] == False:
+        Takes the path, subpath, method, and peerid of the path (if auth user
+        is different from the peer that owns the path, e.g. creator). If approved
+        is False, then the trust relationship does not need to be approved for
+        access"""
+        if len(self.acl["peerid"]) > 0 and approved and self.acl["approved"] is False:
             return False
         if self.acl["relationship"]:
             relationship = self.acl["relationship"].lower()
@@ -440,7 +451,8 @@ class auth():
         fullpath = path.lower() + '/' + subpath.lower()
         # ACLs: ('role', 'path', 'METHODS', 'access')
         logging.debug('Testing access for (' + relationship +
-                      ' ' + self.acl["peerid"] + ') on (' + fullpath + ' ' + peerid + ') using method ' + method)
+                      ' ' + self.acl["peerid"] + ') on (' + fullpath + ' ' +
+                      peerid + ') using method ' + method)
         for acl in self.config.access:
             if acl[0] == 'any' and not self.acl["authenticated"]:
                 continue
@@ -450,6 +462,8 @@ class auth():
                 if fullpath.find(acl[1]) == 0:
                     if len(acl[2]) == 0 or acl[2].find(method) != -1:
                         self.acl["rights"] = acl[3]
-                        logging.debug('Granted ' + acl[3] + ' access with ACL:' + str(acl))
+                        logging.debug('Granted ' + acl[3] +
+                                      ' access with ACL:' +
+                                      str(acl))
                         return True
         return False

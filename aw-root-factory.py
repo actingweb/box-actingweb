@@ -35,6 +35,10 @@ class MainPage(webapp2.RequestHandler):
                 creator = params['creator']
             else:
                 creator = ''
+            if 'trustee_root' in params:
+                trustee_root = params['trustee_root']
+            else:
+                trustee_root = ''
             if 'passphrase' in params:
                 passphrase = params['passphrase']
             else:
@@ -42,9 +46,12 @@ class MainPage(webapp2.RequestHandler):
         except ValueError:
             is_json = False
             creator = self.request.get('creator')
+            trustee_root = self.request.get('trustee_root')
             passphrase = self.request.get('passphrase')
         myself.create(url=self.request.url, creator=creator,
                       passphrase=passphrase)
+        if len(trustee_root) > 0:
+            myself.setProperty('trustee_root', trustee_root)
         self.response.headers.add_header("Location", Config.root + myself.id)
         if Config.www_auth == 'oauth' and not is_json:
             self.redirect(Config.root + myself.id + '/www')
@@ -54,6 +61,8 @@ class MainPage(webapp2.RequestHandler):
             'creator': myself.creator,
             'passphrase': myself.passphrase,
         }
+        if len(trustee_root) > 0:
+            pair['trustee_root'] = trustee_root
         if Config.ui and not is_json:
             path = os.path.join(os.path.dirname(__file__), 'templates/aw-root-created.html')
             self.response.write(template.render(path, pair).encode('utf-8'))

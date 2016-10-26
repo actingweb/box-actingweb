@@ -29,6 +29,9 @@ class MainPage(webapp2.RequestHandler):
             self.response.set_status(403)
             return
 
+        trustee_root = myself.getProperty('trustee_root').value
+        if not trustee_root:
+            trustee_root = ''
         if not path:
             values = {
                 'id': id,
@@ -36,6 +39,7 @@ class MainPage(webapp2.RequestHandler):
                 'version': Config.version,
                 'desc': Config.desc,
                 'info': Config.info,
+                'trustee_root': trustee_root,
                 'specification': Config.specification,
                 'aw_version': Config.aw_version,
                 'aw_supported': Config.aw_supported,
@@ -56,6 +60,8 @@ class MainPage(webapp2.RequestHandler):
             out = Config.desc + myself.id
         elif path == 'info':
             out = Config.info
+        elif path == 'trustee_root':
+            out = trustee_root
         elif path == 'specification':
             out = Config.specification
         elif path == 'actingweb/version':
