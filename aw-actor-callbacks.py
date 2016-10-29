@@ -65,18 +65,17 @@ class MainPage(webapp2.RequestHandler):
         """Handles POST callbacks"""
         (Config, myself, check) = auth.init_actingweb(appreq=self,
                                                       id=id, path='callbacks')
-        if not myself or (check.response["code"] != 200 and check.response["code"] != 401):
-            auth.add_auth_response(appreq=self, auth_obj=check)
-            return
+        # Allow unauthenticated requests to /callbacks/subscriptions, so
+        # do the auth check further below
         path = name.split('/')
         if path[0] == 'subscriptions':
             peerid = path[1]
             subid = path[2]
-            if not check.checkAuthorisation(path='callbacks', subpath='subscriptions', method='POST', peerid=peerid):
-                self.response.set_status(403, 'Forbidden')
-                return
             sub = myself.getSubscription(peerid=peerid, subid=subid, callback=True)
             if sub:
+                if not check.checkAuthorisation(path='callbacks', subpath='subscriptions', method='POST', peerid=peerid):
+                    self.response.set_status(403, 'Forbidden')
+                    return
                 try:
                     params = json.loads(self.request.body.decode('utf-8', 'ignore'))
                 except:
@@ -88,6 +87,9 @@ class MainPage(webapp2.RequestHandler):
                     self.response.set_status(405, 'Processing error')
                 return
             self.response.set_status(404, 'Not found')
+            return
+        if not myself or (check.response["code"] != 200 and check.response["code"] != 401):
+            auth.add_auth_response(appreq=self, auth_obj=check)
             return
         if not check.checkAuthorisation(path='callbacks', subpath=name, method='POST'):
             self.response.set_status(403, 'Forbidden')

@@ -289,6 +289,9 @@ class subscriptionHandler(webapp2.RequestHandler):
         if not check.checkAuthorisation(path='subscriptions', subpath='<id>/<id>', method='GET', peerid=peerid):
             self.response.set_status(403)
             return
+        # Do not delete remote subscription if this is from our peer
+        if len(check.acl['peerid']) == 0:
+            myself.deleteRemoteSubscription(peerid=peerid, subid=subid)
         if not myself.deleteSubscription(peerid=peerid, subid=subid):
             self.response.set_status(404)
             return

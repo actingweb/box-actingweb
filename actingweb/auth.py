@@ -436,6 +436,7 @@ class auth():
         is False, then the trust relationship does not need to be approved for
         access"""
         if len(self.acl["peerid"]) > 0 and approved and self.acl["approved"] is False:
+            logging.debug('Rejected authorization because trust relationship is not approved.')
             return False
         if self.acl["relationship"]:
             relationship = self.acl["relationship"].lower()

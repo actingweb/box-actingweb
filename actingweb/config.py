@@ -31,6 +31,22 @@ class config():
         self.specification = ""                             # URL to a RAML/Swagger etc definition if available
         self.aw_formats = "json"                            # These are the supported formats
         #########
+        # Known and trusted ActingWeb actors
+        #########
+        self.actors = {
+            '<SHORTTYPE>': {
+                'type': 'urn:<ACTINGWEB_TYPE>',
+                'factory': '<ROOT_URI>',
+                'relationship': 'friend',                   # associate, friend, partner, admin
+                },
+            'myself': {
+                'type': 'urn:actingweb:actingweb.org:gae-demo',
+                'factory': self.proto + self.fqdn + '/',
+                'relationship': 'friend',                   # associate, friend, partner, admin
+                },
+        }
+        #########
+
         # OAuth settings for this app, fill in if OAuth is used
         #########
         self.oauth = {

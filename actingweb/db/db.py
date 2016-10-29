@@ -20,6 +20,14 @@ class Property(ndb.Model):
     value = ndb.TextProperty()
 
 
+class Peer(ndb.Model):
+    id = ndb.StringProperty(required=True)
+    peerid = ndb.StringProperty(required=True)
+    baseuri = ndb.StringProperty(required=True)
+    type = ndb.StringProperty(required=True)
+    passphrase = ndb.StringProperty(required=True)
+
+
 class Trust(ndb.Model):
     id = ndb.StringProperty(required=True)
     peerid = ndb.StringProperty(required=True)
