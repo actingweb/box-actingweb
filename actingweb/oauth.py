@@ -104,6 +104,51 @@ class oauth():
         logging.debug('Oauth POST response JSON:' + response.content)
         return json.loads(response.content)
 
+    def putRequest(self, url, params=None, urlencode=False):
+        if params:
+            if urlencode:
+                data = urllib.urlencode(params)
+                logging.info('Oauth PUT request with urlencoded payload: ' + url + ' ' + data)
+            else:
+                data = json.dumps(params)
+                logging.info('Oauth PUT request with JSON payload: ' + url + ' ' + data)
+        else:
+            data = None
+            logging.info('Oauth PUT request: ' + url)
+        if urlencode:
+            if self.token:
+                headers = {'Content-Type': 'application/x-www-form-urlencoded',
+                           'Authorization': 'Bearer ' + self.token,
+                           }
+            else:
+                headers = {'Content-Type': 'application/x-www-form-urlencoded',
+                           }
+        else:
+            if self.token:
+                headers = {'Content-Type': 'application/json',
+                           'Authorization': 'Bearer ' + self.token,
+                           }
+            else:
+                headers = {'Content-Type': 'application/json'}
+        try:
+            urlfetch.set_default_fetch_deadline(20)
+            response = urlfetch.fetch(url=url, payload=data, method=urlfetch.PUT, headers=headers)
+            self.last_response_code = response.status_code
+            self.last_response_message = response.content
+        except:
+            self.last_response_code = 0
+            self.last_response_message = 'No response'
+            logging.warn("Oauth PUT failed with exception")
+            return None
+        if response.status_code == 204:
+            return {}
+        if response.status_code != 200 and response.status_code != 201:
+            logging.info('Error when sending PUT request: ' +
+                         str(response.status_code) + response.content)
+            return None
+        logging.debug('Oauth PUT response JSON:' + response.content)
+        return json.loads(response.content)
+
     def getRequest(self, url, params=None):
         if not self.token:
             logging.debug("No token set in getRequest()")

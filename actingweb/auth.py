@@ -297,6 +297,33 @@ class auth():
                     return ret2
         return None
 
+    def oauthPUT(self, url=None, params=None, urlencode=False):
+        """Used to call PUT from the attached oauth service.
+
+           Uses oauth.putRequest(), but refreshes token if necessary.
+           The function fails if token is invalid and no refresh is
+           possible. For web-based flows, validateOAuthToken() needs
+           to be used to validate token and get redirect URI for new
+           authorization flow.
+        """
+        if not url:
+            return None
+        ret = self.oauth.putRequest(url=url, params=params, urlencode=urlencode)
+        code1 = self.oauth.last_response_code
+        if ret and any(ret) or code1 == 204 or code1 == 201:
+            return ret
+        if self.actor and self.actor.id and (code1 == 401 or code1 == 403):
+            refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
+            if not refresh:
+                logging.warn('Tried to refresh token and failed for actor(' + self.actor.id + ')')
+            else:
+                self.__processOAuthAccept(refresh)
+                ret2 = self.oauth.putRequest(url=url, params=params, urlencode=urlencode)
+                code2 = self.oauth.last_response_code
+                if ret2 and any(ret2) or code2 == 204 or code2 == 201:
+                    return ret2
+        return None
+
     # Called from a www page (browser access) to verify that a cookie has been
     # set to the actor's valid token.
     def __checkCookieAuth(self, appreq, path):

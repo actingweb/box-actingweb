@@ -37,7 +37,7 @@ def on_delete_callbacks(myself, req, name):
     return False
 
 
-def on_post_callbacks(myself, req, name):
+def on_post_callbacks(myself, req, auth, name):
     """Customizible function to handle POST /callbacks"""
     Config = config.config()
     logging.debug("Callback body: "+req.request.body.decode('utf-8', 'ignore'))
