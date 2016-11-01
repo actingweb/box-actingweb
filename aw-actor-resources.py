@@ -45,12 +45,40 @@ class MainPage(webapp2.RequestHandler):
         pair = on_aw_resources.on_delete_resources(myself=myself,
                                                 req=self,
                                                 auth=check,
-                                                name=name,
-                                                params=self.request.get_all())
+                                                name=name)
         if pair:
             if pair >= 100 and pair <= 999:
                 return
             if any(pair): 
+                out = json.dumps(pair)
+                self.response.write(out.encode('utf-8'))
+                self.response.headers["Content-Type"] = "application/json"
+                self.response.set_status(200)
+        else:
+            self.response.set_status(404)
+
+    def put(self, id, name):
+        (Config, myself, check) = auth.init_actingweb(appreq=self,
+                                                      id=id, path='resources', subpath=name)
+        if not myself or check.response["code"] != 200:
+            return
+        if not check.checkAuthorisation(path='resources', subpath=name, method='PUT'):
+            self.response.set_status(403)
+            return
+        try:
+            params = json.loads(self.request.body.decode('utf-8', 'ignore'))
+        except:
+            self.response.set_status(405, "Error in json body")
+            return
+        pair = on_aw_resources.on_put_resources(myself=myself,
+                                                req=self,
+                                                auth=check,
+                                                name=name,
+                                                params=params)
+        if pair:
+            if pair >= 100 and pair <= 999:
+                return
+            if any(pair):
                 out = json.dumps(pair)
                 self.response.write(out.encode('utf-8'))
                 self.response.headers["Content-Type"] = "application/json"

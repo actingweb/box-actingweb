@@ -209,7 +209,11 @@ class oauth():
             return None
         if response.status_code == 204:
             return {}
-        return json.loads(response.content)
+        try:
+            ret = json.loads(response.content)
+        except:
+            return {}
+        return ret
 
     def oauthRedirectURI(self, state=''):
         params = {
