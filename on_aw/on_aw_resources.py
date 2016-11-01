@@ -20,14 +20,82 @@ def on_get_resources(myself, req, auth, name, params):
 
         Returning {} will give a 404 response back to requestor. 
     """
+    Config = config.config()
+    path = name.lower().split('/')
+    if len(path) <= 1:
+        return {}
+    if path[0] == 'folders':
+        folderId = path[1]
+        boxLink = box.box(auth=auth, actorId=myself.id)
+        folder = boxLink.getFolder(folder_id=folderId)
+        if folder:
+            return folder
     return {}
 
 
-def on_delete_resources(myself, req, auth, name, params):
+def on_delete_resources(myself, req, auth, name):
     """ Called on DELETE to resources. Return struct for json out.
 
         Returning {} will give a 404 response back to requestor. 
     """
+    Config = config.config()
+    path = name.lower().split('/')
+    if len(path) <= 1:
+        return {}
+    if path[0] == 'folders':
+        folderId = path[1]
+        boxLink = box.box(auth=auth, actorId=myself.id)
+        boxLink.cleanupFolder(folder_id=folderId)
+        req.response.set_status(204)
+        return 204
+    return {}
+
+
+def on_put_resources(myself, req, auth, name, params):
+    """ Called on PUT to resources. Return struct for json out.
+
+        Returning {} will give a 404 response back to requestor. 
+        Returning an error code after setting the response will not change
+        the error code.
+    """
+    Config = config.config()
+    path = name.lower().split('/')
+    if len(path) <= 1:
+        return {}
+    if path[0] == 'folders':
+        folderId = path[1]
+        if 'collaborations' not in params:
+            req.response.set_status(405, "Mandatory parameter collaborations missing")
+            return 405
+        boxLink = box.box(auth=auth, actorId=myself.id)
+        for collab in params['collaborations']:
+            if 'email' not in collab:
+                continue
+            if 'role' in collab:
+                role = collab['role']
+            else:
+                role = 'editor'
+            if 'notify' in collab:
+                notify = collab['notify']
+            else:
+                notify = False
+            if 'action' in collab and collab['action'] == 'delete':
+                if not boxLink.deleteCollaboration(folder_id=folderId, 
+                                                   email=collab['email']):
+                    logging.warn('Failed to delete collaboration user(' +
+                                 collab['email'] + ') in folder(' +
+                                 folderId + ')')
+            else:
+                if not boxLink.createCollaboration(folder_id=folderId,
+                                                   email=collab['email'],
+                                                   role=role,
+                                                   notify=notify):
+                    logging.warn('Failed to add collaboration user(' +
+                                 collab['email'] +
+                                 ') in folder(' +
+                                 folderId + ')')
+        req.response.set_status(200)
+        return 200
     return {}
 
 
@@ -52,8 +120,22 @@ def on_post_resources(myself, req, auth, name, params):
         boxLink = box.box(auth=auth, actorId=myself.id)
         folderid = boxLink.createFolder(foldername, parent)
         if not folderid:
-            req.response.set_status(408, "Failed creating folder in box")
-            return 408
+            folder = boxLink.getFolder(name=foldername, parent=parent)
+            pair = {
+                'error': {
+                    'code': auth.oauth.last_response_code,
+                    'message': auth.oauth.last_response_message,
+                },
+            }
+            if folder:
+                pair['name'] = folder['name']
+                pair['parent'] = folder['parentId']
+                pair['id'] = folder['boxId']
+                pair['url'] = folder['url']
+            return pair
+        url = boxLink.createLink(folder_id=folderid)
+        if not url:
+            url = ''
         if 'role' in params:
             role = params['role']
         else:
@@ -72,6 +154,7 @@ def on_post_resources(myself, req, auth, name, params):
             emails = {}
         boxLink.createWebhook(folder_id=folderid, 
                               callback=Config.root + myself.id + '/callbacks/box/' + folderid)
+        req.response.headers.add_header("Location", str(Config.root + 'folders/' + folderid))
         pair = {
             'name': foldername,
             'parent': parent,
@@ -79,6 +162,7 @@ def on_post_resources(myself, req, auth, name, params):
             'emails': emails,
             'role': role,
             'notify': notify,
+            'url': url,
         }
         return pair
     return {}
