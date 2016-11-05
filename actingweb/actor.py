@@ -132,7 +132,7 @@ class actor():
         properties = db.Property.query(db.Property.id == self.id).fetch(use_cache=False)
         return properties
 
-    def deletePeer(self, shorttype=None, peerid=None):
+    def deletePeerTrustee(self, shorttype=None, peerid=None):
         if not peerid and not shorttype:
             return False
         Config = config.config()
@@ -140,11 +140,11 @@ class actor():
             logging.error('Got a request to delete an unknown actor type(' + shorttype + ')')
             return False
         if peerid:
-            new_peer = peer.peer(actor=self, peerid=peerid)
+            new_peer = peer.peerTrustee(actor=self, peerid=peerid)
             if not new_peer.peer:
                 return False
         elif shorttype:
-            new_peer = peer.peer(actor=self, shorttype=shorttype)
+            new_peer = peer.peerTrustee(actor=self, shorttype=shorttype)
             if not new_peer.peer:
                 return False
         logging.debug(
@@ -174,8 +174,8 @@ class actor():
             return False
         return True
 
-    def getPeer(self, shorttype=None, peerid=None):
-        """ Get a peer, either existing or created as trustee 
+    def getPeerTrustee(self, shorttype=None, peerid=None):
+        """ Get a peer, either existing or create it as trustee 
 
         Will retrieve an existing peer or create a new and establish trust.
         If no trust exists, a new trust will be established.
@@ -189,9 +189,9 @@ class actor():
             logging.error('Got a request to create an unknown actor type(' + shorttype + ')')
             return None
         if peerid:
-            new_peer = peer.peer(actor=self, peerid=peerid)
+            new_peer = peer.peerTrustee(actor=self, peerid=peerid)
         else:
-            new_peer = peer.peer(actor=self, shorttype=shorttype)
+            new_peer = peer.peerTrustee(actor=self, shorttype=shorttype)
         if new_peer.peer:
             logging.debug('Found peer in getPeer, now checking existing trust...')
             new_trust = trust.trust(id=self.id, peerid=new_peer.peerid)
@@ -204,7 +204,7 @@ class actor():
             if len(factory) == 0:
                 logging.error('Peer actor of shorttype(' + 
                             shorttype + ') does not have factory set.')
-            new_peer = peer.peer(actor=self)
+            new_peer = peer.peerTrustee(actor=self)
             params = {
                 'creator': 'trustee',
                 'trustee_root': Config.root + self.id

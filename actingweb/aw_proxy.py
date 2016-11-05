@@ -25,23 +25,62 @@ class aw_proxy():
     """
 
     def __init__(self, trust_target=None, peer_target=None):
-        if peer_target and peer_target.actor:
-            self.actorid = peer_target.actor.id
-        else:
-            self.actorid = None
         self.last_response_code = 0
         self.last_response_message = 0
         self.last_location = None
         if trust_target and trust_target.trust:
             self.trust = trust_target
-        else:
+            self.actorid = trust_target.id
+        elif peer_target and peer_target.actor:
+            self.actorid = peer_target.actor.id
             self.trust = None
-            if peer_target and peer_target.peerid and self.actorid:
+            if peer_target.peerid:
                 self.trust = trust.trust(id=self.actorid, peerid=peer_target.peerid)
                 if not self.trust or not self.trust.trust:
                     self.trust = None
 
-    def createResource(self, path=None, params=None, subscribe=False):
+    def getResource(self, path=None, params=None):
+        if not path or len(path) == 0:
+            return None
+        if not params:
+            params = {}
+        if not self.trust or not self.trust.baseuri or not self.trust.secret:
+            return None
+        url = self.trust.baseuri.strip('/') + '/' + path.strip('/')
+        if params:
+            url = url + '?' + urllib.urlencode(params)
+        headers = {'Authorization': 'Bearer ' + self.trust.secret,
+                   }
+        logging.debug(
+            'Getting trust peer resource at (' + url + ')')
+        try:
+            response = urlfetch.fetch(url=url,
+                                      method=urlfetch.GET,
+                                      headers=headers
+                                      )
+            self.last_response_code = response.status_code
+            self.last_response_message = response.content
+        except:
+            logging.debug('Not able to get peer resource')
+            self.last_response_code = 408
+            return {
+                'error': {
+                    'code': 408,
+                    'message': 'Unable to communciate with trust peer service.',
+                },
+            }
+        logging.debug('Get trust peer resource POST response:(' +
+                      str(response.status_code) + ') ' + response.content)
+        if response.status_code < 200 or response.status_code > 299:
+            logging.warn('Not able to get trust peer resource.')
+        try:
+            result = json.loads(response.content)
+        except:
+            logging.debug("Not able to parse response when getting resource at(" + url + ")")
+            result = {}
+        return result
+
+    def createResource(self, path=None, params=None):
         if not path or len(path) == 0:
             return None
         if not params:

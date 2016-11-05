@@ -9,11 +9,11 @@ import config
 import logging
 
 __all__ = [
-    'peer',
+    'peerTrustee',
 ]
 
 
-class peer():
+class peerTrustee():
 
     def __init__(self, actor=None, shorttype=None, peerid=None):
         if actor and actor.id:
@@ -28,15 +28,15 @@ class peer():
     def get(self, peerid=None, shorttype=None):
         result = None
         if peerid:
-            result = db.Peer.query(db.Peer.id == self.actor.id,
-                                   db.Peer.peerid == peerid).get(use_cache=False)
+            result = db.PeerTrustee.query(db.PeerTrustee.id == self.actor.id,
+                                   db.PeerTrustee.peerid == peerid).get(use_cache=False)
         elif shorttype:
             Config = config.config()
             if not Config.actors[shorttype]:
                 logging.error('Got request to get peer with unknown shorttype(' + shorttype + ')')
                 return False
-            result = db.Peer.query(db.Peer.id == self.actor.id,
-                                   db.Peer.type == Config.actors[shorttype]['type']).fetch(use_cache=False)
+            result = db.PeerTrustee.query(db.PeerTrustee.id == self.actor.id,
+                                   db.PeerTrustee.type == Config.actors[shorttype]['type']).fetch(use_cache=False)
             if len(result) > 1:
                 logging.error('Found more than one peer of this type(' + 
                               shorttype + '). Unable to determine which, need peerid lookup.')
@@ -66,11 +66,11 @@ class peer():
             self.peer.type = type
             self.passphrase = passphrase
         else:
-            self.peer = db.Peer(id=self.actor.id,
-                                peerid=peerid,
-                                baseuri=baseuri,
-                                type=type,
-                                passphrase=passphrase)
+            self.peer = db.PeerTrustee(id=self.actor.id,
+                                       peerid=peerid,
+                                       baseuri=baseuri,
+                                       type=type,
+                                       passphrase=passphrase)
         self.peer.put(use_cache=False)
         self.fresh = True
         self.peerid = peerid

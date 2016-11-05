@@ -20,7 +20,7 @@ class Property(ndb.Model):
     value = ndb.TextProperty()
 
 
-class Peer(ndb.Model):
+class PeerTrustee(ndb.Model):
     id = ndb.StringProperty(required=True)
     peerid = ndb.StringProperty(required=True)
     baseuri = ndb.StringProperty(required=True)

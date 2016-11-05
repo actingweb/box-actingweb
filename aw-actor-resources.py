@@ -24,8 +24,7 @@ class MainPage(webapp2.RequestHandler):
         pair = on_aw_resources.on_get_resources(myself=myself,
                                                 req=self,
                                                 auth=check,
-                                                name=name,
-                                                params=self.request.get_all())
+                                                name=name)
         if pair and any(pair): 
             out = json.dumps(pair)
             self.response.write(out.encode('utf-8'))
@@ -43,9 +42,9 @@ class MainPage(webapp2.RequestHandler):
             self.response.set_status(403)
             return
         pair = on_aw_resources.on_delete_resources(myself=myself,
-                                                req=self,
-                                                auth=check,
-                                                name=name)
+                                                   req=self,
+                                                   auth=check,
+                                                   name=name)
         if pair:
             if pair >= 100 and pair <= 999:
                 return
