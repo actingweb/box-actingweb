@@ -93,8 +93,7 @@ class box():
             return None
         if folder_id:
             folder = Folder.query(Folder.actorId == self.actorId,
-                                  Folder.boxId == folder_id,
-                                  Folder.parentId == parent
+                                  Folder.boxId == folder_id
                                   ).get(use_cache=False)
         else:
             folder = Folder.query(Folder.actorId == self.actorId,
@@ -246,6 +245,13 @@ class box():
                 logging.warn('Was not able to add ' + email +
                              ' to access list for folder(' + folder_id + ')')
 
+    def getWebhook(self, id=None):
+        if not id:
+            return None
+        return Webhook.query(
+            Webhook.actorId == self.actorId,
+            Webhook.boxId == id).get()
+
     def deleteWebhook(self, folder_id=None):
         if not folder_id:
             return False
@@ -275,7 +281,10 @@ class box():
                 "FILE.UNLOCKED",
                 "FOLDER.CREATED",
                 "FOLDER.DELETED",
+                "FOLDER.RESTORED",
+                "FOLDER.TRASHED",
                 "FOLDER.MOVED",
+                "WEBHOOK.DELETED",
             ]
         params = {
             'target': {
