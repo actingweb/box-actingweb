@@ -726,7 +726,10 @@ class actor():
         if sub.resource:
             params['resource'] = sub.resource
         if sub.granularity == "high":
-            params['data'] = blob
+            try:
+                params['data'] = json.loads(blob)
+            except:
+                params['data'] = blob
         if sub.granularity == "low":
             Config = config.config()
             params['url'] = Config.root + self.id + '/subscriptions/' + \
