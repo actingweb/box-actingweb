@@ -228,7 +228,7 @@ class auth():
             return None
         ret = self.oauth.getRequest(url=url, params=params)
         code1 = self.oauth.last_response_code
-        if ret and any(ret) or code1 == 204 or code1 == 201:
+        if (ret and any(ret)) or code1 == 204 or code1 == 201 or code1 == 404:
             return ret
         if self.actor and self.actor.id and (not ret or code1 == 401 or code1 == 403):
             refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
@@ -256,7 +256,7 @@ class auth():
             return None
         ret = self.oauth.deleteRequest(url=url)
         code1 = self.oauth.last_response_code
-        if ret and any(ret) or code1 == 204:
+        if (ret and any(ret)) or code1 == 204 or code1 == 404:
             return ret
         if self.actor and self.actor.id and (code1 == 401 or code1 == 403):
             refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
@@ -283,7 +283,7 @@ class auth():
             return None
         ret = self.oauth.postRequest(url=url, params=params, urlencode=urlencode)
         code1 = self.oauth.last_response_code
-        if ret and any(ret) or code1 == 204 or code1 == 201:
+        if (ret and any(ret)) or code1 == 204 or code1 == 201 or code1 == 404:
             return ret
         if self.actor and self.actor.id and (code1 == 401 or code1 == 403):
             refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
@@ -310,7 +310,7 @@ class auth():
             return None
         ret = self.oauth.putRequest(url=url, params=params, urlencode=urlencode)
         code1 = self.oauth.last_response_code
-        if ret and any(ret) or code1 == 204 or code1 == 201:
+        if (ret and any(ret)) or code1 == 204 or code1 == 201 or code1 == 404:
             return ret
         if self.actor and self.actor.id and (code1 == 401 or code1 == 403):
             refresh = self.oauth.oauthRefreshToken(refresh_token=self.refresh_token)
