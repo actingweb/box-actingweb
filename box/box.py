@@ -36,6 +36,7 @@ class box():
         self.auth = auth
         self.box = {
             'folder_uri': "https://api.box.com/2.0/folders/",
+            'file_uri': "https://api.box.com/2.0/files/",
             'collaboration_uri': "https://api.box.com/2.0/collaborations/",
             'webhook_uri': "https://api.box.com/2.0/webhooks/",
         }
@@ -77,6 +78,22 @@ class box():
         for collab in collabs:
             collab.key.delete(use_cache=False)
         return True
+
+    def getBoxFile(self, id=None):
+        if not id:
+            return None
+        ret = self.auth.oauthGET(url=self.box['file_uri'] + id)
+        if self.lastResponse('code') != 200 or not ret:
+            return None
+        return ret
+
+    def getBoxFolder(self, id=None):
+        if not id:
+            return None
+        ret = self.auth.oauthGET(url=self.box['folder_uri'] + id)
+        if self.lastResponse('code') != 200 or not ret:
+            return None
+        return ret
 
     def getFolders(self):
         folders = Folder.query(Folder.actorId == self.actorId
@@ -279,6 +296,9 @@ class box():
                 "FILE.MOVED",
                 "FILE.LOCKED",
                 "FILE.UNLOCKED",
+                "COMMENT.CREATED",
+                "COMMENT.UPDATED",
+                "COMMENT.DELETED",
                 "FOLDER.CREATED",
                 "FOLDER.DELETED",
                 "FOLDER.RESTORED",

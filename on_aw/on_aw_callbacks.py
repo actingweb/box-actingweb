@@ -49,20 +49,43 @@ def on_post_callbacks(myself, req, auth, name):
     path = name.split('/')
     if path[0] == 'box':
         trigger = ''
-        filename = ''
-        foldername = ''
+        filename = 'Not Available'
+        foldername = 'Not Available'
+        file_id = None
+        folder_id = None
         user = 'Unknown'
+        message = ''
         if 'trigger' in body:
             trigger = body['trigger']
         if 'source' in body:
             if 'type' in body['source']:
                 if body['source']['type'] == 'file'  and 'name' in body['source']:
                     filename = body['source']['name']
+                elif body['source']['type'] == 'file'  and 'id' in body['source']:
+                    file_id = body['source']['id']
                 if body['source']['type'] == 'folder'  and 'name' in body['source']:
                     foldername = body['source']['name']
+                elif body['source']['type'] == 'folder'  and 'id' in body['source']:
+                    folder_id = body['source']['id']
+                if body['source']['type'] == 'comment'  and 'message' in body['source']:
+                    message = body['source']['message']
+                    if 'item' in body['source'] and 'type' in body['source']['item']:
+                        if body['source']['item']['type'] == 'file':
+                            file_id = body['source']['item']['id']
+                        elif body['source']['item']['type'] == 'folder':
+                            folder_id = body['source']['item']['id']
         if 'created_by' in body:
             if 'name' in body['created_by']:
                 user = body['created_by']['name']
+        boxLink = box.box(auth=auth, actorId=myself.id)
+        if file_id and (trigger != 'FILE.TRASHED' and trigger != 'FILE.DELETED'):
+            file = boxLink.getBoxFile(id=file_id)
+            if file and 'name' in file:
+                filename = file['name']
+        if folder_id and (trigger != 'FOLDER.TRASHED' and trigger != 'FOLDER.DELETED'):
+            folder = boxLink.getBoxFolder(id=folder_id)
+            if folder and 'name' in folder:
+                foldername = folder['name']
         logging.debug('Got trigger(' + trigger + ') for (file:' + filename + '/folder:' + foldername + ') by user ' + user)
         if trigger == 'FILE.UPLOADED':
             txt = user + ' uploaded a new file named: ' + filename
@@ -78,6 +101,12 @@ def on_post_callbacks(myself, req, auth, name):
             txt = user + ' locked the file named: ' + filename
         elif trigger == 'FILE.UNLOCKED':
             txt = user + ' unlocked the file named: ' + filename
+        elif trigger == 'COMMENT.CREATED':
+            txt = user + ' commented on the file named: ' + filename + ' - ' + message
+        elif trigger == 'COMMENT.UPDATED':
+            txt = user + ' updated comment on the file named: ' + filename + ' - ' + message
+        elif trigger == 'COMMENT.DELETED':
+            txt = user + ' deleted comment on the file named: ' + filename + ' - ' + message
         elif trigger == 'FOLDER.CREATED':
             txt = user + ' created a new folder named: ' + foldername
         elif trigger == 'FOLDER.DELETED':
@@ -100,8 +129,9 @@ def on_post_callbacks(myself, req, auth, name):
             params['name'] = filename
         elif len(foldername) > 0:
             params['name'] = foldername
+        if len(message) > 0:
+            params['message'] = message
         if body and 'webhook' in body and 'id' in body['webhook']:
-            boxLink = box.box(auth=auth, actorId=myself.id)
             hook = boxLink.getWebhook(id=body['webhook']['id'])
             if hook and hook.folderId:
                 blob = json.dumps(params)
