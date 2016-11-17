@@ -726,10 +726,7 @@ class actor():
         if sub.resource:
             params['resource'] = sub.resource
         if sub.granularity == "high":
-            try:
-                params['data'] = json.loads(blob)
-            except:
-                params['data'] = blob
+            params['data'] = blob
         if sub.granularity == "low":
             Config = config.config()
             params['url'] = Config.root + self.id + '/subscriptions/' + \
@@ -758,7 +755,10 @@ class actor():
             self.last_response_message = 'No response from peer for subscription callback'
 
     def registerDiffs(self, target=None, subtarget=None, resource=None, blob=None):
-        """Registers a blob diff against all subscriptions with the correct target, subtarget, and resource."""
+        """Registers a blob diff against all subscriptions with the correct target, subtarget, and resource.
+
+            If resource is set, the blob is expected to be the FULL resource object, not a diff.
+            """
         if blob is None or not target:
             return
         # Get all subscriptions, both with the specific subtarget/resource and those
@@ -814,14 +814,23 @@ class actor():
             # The diff is on the resource, but the subscription is on a 
             # higher level
             elif resource and not subObj.resource:
-                # Create a data["subtarget"]["resource"] = blob diff to give correct level
-                # of diff to subscriber
+                # Since we have a resource, we know the blob is the entire resource, not a diff
+                # If the subscription is for a sub-target, send [resource] = blob
+                # If the subscription is for a target, send [subtarget][resource] = blob
                 upblob = {}
                 try:
                     jsonblob = json.loads(blob)
-                    upblob[subtarget][resource] = jsonblob
+                    if not subObj.subtarget:
+                        upblob[subtarget] = {}
+                        upblob[subtarget][resource] = jsonblob
+                    else:
+                        upblob[resource] = jsonblob
                 except:
-                    upblob[subtarget][resource] = blob
+                    if not subObj.subtarget:
+                        upblob[subtarget] = {}
+                        upblob[subtarget][resource] = blob
+                    else:
+                        upblob[resource] = blob
                 finblob = json.dumps(upblob)
                 logging.debug("         - diff has resource(" + resource +
                               "), subscription has not, adding diff(" + finblob + ")")

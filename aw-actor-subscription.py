@@ -10,6 +10,7 @@ import webapp2
 import os
 from google.appengine.ext.webapp import template
 import json
+import datetime
 
 
 class rootHandler(webapp2.RequestHandler):
@@ -229,7 +230,7 @@ class subscriptionHandler(webapp2.RequestHandler):
                 d = diff.diff
             pairs.append({
                 'sequence': diff.seqnr,
-                'timestamp': str(diff.timestamp),
+                'timestamp': diff.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
                 'data': d,
             })
         if len(pairs) == 0:
@@ -325,7 +326,7 @@ class diffHandler(webapp2.RequestHandler):
         except:
             d = diff.diff
         pairs = {
-            'timestamp': str(diff.timestamp),
+            'timestamp': diff.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'target': sub.target,
             'subtarget': sub.subtarget,
             'resource': sub.resource,
