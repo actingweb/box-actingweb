@@ -143,9 +143,59 @@ class relationshipHandler(webapp2.RequestHandler):
             return
         self.response.set_status(404, "Not found")
 
-    def post(self, id, relationship):
+    def put(self, id, relationship):
         (Config, myself, check) = auth.init_actingweb(appreq=self,
                                                       id=id, path='trust', subpath=relationship, add_response=False)
+        if not myself:
+            return
+        if relationship != 'trustee':
+            self.response.set_status(404, "Not found")
+            return
+        # Access is the same as /trust
+        if not check.checkAuthorisation(path='trust', method='POST'):
+            self.response.set_status(403)
+            return
+        try:
+            params = json.loads(self.request.body.decode('utf-8', 'ignore'))
+            if 'trustee_root' in params:
+                trustee_root = params['trustee_root']
+            else:
+                trustee_root = ''
+            if 'creator' in params:
+                creator = params['creator']
+            else:
+                creator = None
+        except ValueError:
+            self.response.set_status(400, 'No json content')
+            return
+        if len(trustee_root) > 0:
+            myself.setProperty('trustee_root', trustee_root)
+        if creator:
+            myself.modify(creator=creator)
+        self.response.set_status(204, 'No content')
+
+    def delete(self, id, relationship):
+        (Config, myself, check) = auth.init_actingweb(appreq=self,
+                                                      id=id, path='trust',
+                                                      subpath=relationship,
+                                                      add_response=False)
+        if not myself:
+            return
+        if relationship != 'trustee':
+            self.response.set_status(404, "Not found")
+            return
+        # Access is the same as /trust
+        if not check.checkAuthorisation(path='trust', method='DELETE'):
+            self.response.set_status(403)
+            return
+        myself.deleteProperty('trustee_root')
+        self.response.set_status(204, 'No content')
+
+    def post(self, id, relationship):
+        (Config, myself, check) = auth.init_actingweb(appreq=self,
+                                                      id=id, path='trust',
+                                                      subpath=relationship,
+                                                      add_response=False)
         if not myself:
             return
         if not check.checkAuthorisation(path='trust', subpath='<type>', method='POST'):

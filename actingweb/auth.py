@@ -7,6 +7,7 @@ import time
 import config
 import oauth
 import base64
+import math
 
 __all__ = [
     'auth',
@@ -242,7 +243,6 @@ class auth():
                     return ret2
         return None
 
-
     def oauthDELETE(self, url=None):
         """Used to call DELETE from the attached oauth service.
 
@@ -422,6 +422,23 @@ class auth():
         if bearer.lower() != "bearer":
             return False
         self.authn_done = True
+        trustee = self.actor.getProperty('trustee_root').value
+        # If trustee_root is set, creator name is 'trustee' and
+        # bit strength of passphrase is > 80, use passphrase as
+        # token
+        if trustee and self.actor.creator.lower() == 'trustee':
+            if math.floor(len(self.actor.passphrase)*math.log(94,2)) > 80:
+                if token == self.actor.passphrase:
+                    self.acl["relationship"] = 'trustee'
+                    self.acl["peerid"] = ''
+                    self.acl["approved"] = True
+                    self.acl["authenticated"] = True
+                    self.response['code'] = 200
+                    self.trust = None
+                    self.token = self.actor.passphrase
+                    return True
+            else:
+                logging.debug('Attempted trustee bearer token auth with <80 bit strength token.')
         new_trust = trust.trust(id=self.actor.id, token=token)
         if new_trust.trust:
             self.acl["relationship"] = new_trust.relationship

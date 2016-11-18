@@ -47,7 +47,9 @@ class rootHandler(webapp2.RequestHandler):
                 'granularity': sub.granularity,
                 'sequence': sub.seqnr,
             })
-        data = {'data': pairs,
+        data = {
+                'id': myself.id,
+                'data': pairs,
                 }
         out = json.dumps(data)
         self.response.write(out)
@@ -133,7 +135,10 @@ class relationshipHandler(webapp2.RequestHandler):
                 'granularity': sub.granularity,
                 'sequence': sub.seqnr,
             })
-        data = {'data': pairs,
+        data = {
+                'id': myself.id,
+                'peerid': peerid,
+                'data': pairs,
                 }
         out = json.dumps(data)
         self.response.write(out)
@@ -236,7 +241,11 @@ class subscriptionHandler(webapp2.RequestHandler):
         if len(pairs) == 0:
             self.response.set_status(404, 'No diffs available')
             return
-        data = {'target': sub.target,
+        data = {
+                'id': myself.id,
+                'peerid': peerid,
+                'subscriptionid': subid,
+                'target': sub.target,
                 'subtarget': sub.subtarget,
                 'resource': sub.resource,
                 'data': pairs,
@@ -326,10 +335,14 @@ class diffHandler(webapp2.RequestHandler):
         except:
             d = diff.diff
         pairs = {
+            'id': myself.id,
+            'peerid': peerid,
+            'subscriptionid': subid,
             'timestamp': diff.timestamp.strftime('%Y-%m-%dT%H:%M:%S.%fZ'),
             'target': sub.target,
             'subtarget': sub.subtarget,
             'resource': sub.resource,
+            'sequence': seqid,
             'data': d,
         }
         sub.clearDiff(seqid)

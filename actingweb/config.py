@@ -91,7 +91,7 @@ class config():
             ('partner', 'properties', '', 'a'),
             ('admin', 'properties', '', 'a'),
             ('creator', 'resources', '', 'a'),
-            ('friend', 'resources', '', 'a'),              # Allow friend/partner/admin all
+            ('friend', 'resources', '', 'a'),               # Allow friend/partner/admin all
             ('partner', 'resources', '', 'a'),
             ('admin', 'resources', '', 'a'),
             ('', 'trust/<type>', 'POST', 'a'),              # Allow unauthenticated POST
@@ -102,7 +102,8 @@ class config():
             ('owner', 'subscriptions', '', 'a'),             # Owner can create++ own subscriptions
             ('creator', 'subscriptions', '', 'a'),           # Creator can do everything
             ('trustee', 'subscriptions', '', 'a'),           # Trustee can do everything
-            ('creator', '/', '', 'a'),                      # Root access for actor
+            ('creator', '/', '', 'a'),                       # Root access for actor
+            ('trustee', '/', '', 'a'),
             ('admin', '/', '', 'a'),
         ]
         #########
