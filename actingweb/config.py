@@ -41,7 +41,7 @@ class config():
                 'relationship': 'friend',                   # associate, friend, partner, admin
                 },
             'myself': {
-                'type': 'urn:actingweb:actingweb.org:gae-demo',
+                'type': self.type,
                 'factory': self.proto + self.fqdn + '/',
                 'relationship': 'friend',                   # associate, friend, partner, admin
                 },
