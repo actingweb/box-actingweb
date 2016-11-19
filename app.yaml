@@ -17,36 +17,41 @@ handlers:
   script: aw-root-factory.application
   secure: always
 
-- url: /(.*?)/www/?(.*)
+- url: /([^:/\s]+)/www/?(.*)
   script: aw-actor-www.application
   secure: always
 
-- url: /(.*?)/properties/?(.*)
+- url: /([^:/\s]+)/properties/?(.*)
   script: aw-actor-properties.application
   secure: always
 
-- url: /(.*?)/resources/?(.*)
+- url: /([^:/\s]+)/resources/?(.*)
   script: aw-actor-resources.application
   secure: always
 
-- url: /(.*?)/callbacks/?(.*)
+- url: /([^:/\s]+)/callbacks/?(.*)
   script: aw-actor-callbacks.application
   secure: always
 
-- url: /(.*?)/meta/?(.*)
+- url: /([^:/\s]+)/meta/?(.*)
   script: aw-actor-meta.application
   secure: always
 
-- url: /(.*?)/trust/?(.*)
+- url: /([^:/\s]+)/trust/?(.*)
   script: aw-actor-trust.application
   secure: always
 
-- url: /(.*?)/subscriptions/?(.*)
+- url: /([^:/\s]+)/subscriptions/?(.*)
   script: aw-actor-subscription.application
   secure: always
 
-- url: /(.*?)/oauth/?(.*)
+- url: /([^:/\s]+)/oauth/?(.*)
   script: aw-actor-oauth.application
+  secure: always
+
+# The below devtest path MAY be deleted to avoid exposure of the aw-devtest.py code
+- url: /([^:/\s]+)/devtest/?(.*)
+  script: aw-devtest.application
   secure: always
 
 # Add any non-actingweb root path applications below

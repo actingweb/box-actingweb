@@ -17,6 +17,7 @@ class config():
         self.ui = True                                      # Turn on the /www path
         self.www_auth = "oauth"                             # basic or oauth: basic for creator + bearer tokens
         self.fqdn = "box-spark-dev.appspot.com"         # The host and domain, i.e. FQDN, of the URL
+        self.devtest = True                                 # Enable /devtest path for test purposes, MUST be False in production
         self.proto = "https://"                             # http or https
         self.logLevel = logging.DEBUG  # Change to WARN for production, DEBUG for debugging, and INFO for normal testing
         #########

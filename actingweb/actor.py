@@ -755,7 +755,6 @@ class actor():
         if sub.resource:
             params['resource'] = sub.resource
         if sub.granularity == "high":
-            params['data'] = blob
             try:
                 params['data'] = json.loads(blob)
             except:
