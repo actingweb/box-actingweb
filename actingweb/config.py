@@ -16,7 +16,7 @@ class config():
         #########
         self.ui = True                                      # Turn on the /www path
         self.www_auth = "oauth"                             # basic or oauth: basic for creator + bearer tokens
-        self.fqdn = "box-spark-dev.appspot.com"         # The host and domain, i.e. FQDN, of the URL
+        self.fqdn = "box-actingweb.appspot.com"         # The host and domain, i.e. FQDN, of the URL
         self.devtest = True                                 # Enable /devtest path for test purposes, MUST be False in production
         self.proto = "https://"                             # http or https
         self.logLevel = logging.DEBUG  # Change to WARN for production, DEBUG for debugging, and INFO for normal testing
@@ -51,8 +51,8 @@ class config():
         # OAuth settings for this app, fill in if OAuth is used
         #########
         self.oauth = {
-            'client_id': "eirmvll7oq3cwgsbcyteckzirp4jc3x8",                                # An empty client_id turns off oauth capabilities
-            'client_secret': "HdThSTk8bf36Mjx0PE7MzzotYJjCko9T",
+            'client_id': "kpsrydn1uo70meft1fsfdakj71szbqbf",                                # An empty client_id turns off oauth capabilities
+            'client_secret': "lmBTymbqGiS7HykAD02IvYb0voVPZgzp",
             'redirect_uri': self.proto + self.fqdn + "/oauth",
             'scope': "",
             'auth_uri': "https://account.box.com/api/oauth2/authorize",
